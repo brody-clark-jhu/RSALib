@@ -1,59 +1,179 @@
 .section .text
-.global gcd, powmod, modinv, pow, mod, encrypt, decrypt
-.global read_int, print_int, read_string, print_string
-.global write_file, read_file
+.global gcd, pow, is_prime, phi, modulo, modinv, encrypt, decrypt
+
+
+is_prime:
+    # allocate space on stack
+    SUB sp, sp, #4
+    STR lr, [sp, #0]
+
+    # Number is prime if modulo is greater than 0
+    BL modulo
+    CMP r0, #0
+    MOVEQ r0, #1
+    MOVNE r0, #0
+    
+    
+    # Return process
+    LDR lr, [sp, #0]
+    ADD sp, sp, #4
+    MOV pc, lr
+
+#END is_prime
+
+# Returns totient (p-1)(q-1)
+phi:
+    # allocate space on stack
+    SUB sp, sp, #4
+    STR lr, [sp, #0]
+    
+    SUB r0, r0, #1
+    SUB r1, r1, #1
+    MUL r0, r0, r1
+
+    # Return process
+    LDR lr, [sp, #0]
+    ADD sp, sp, #4
+    MOV pc, lr
+#END phi
+
 
 gcd:
+    # allocate space on stack
+    SUB sp, sp, #4
+    STR lr, [sp, #0]
+
     cmp r1, #0
     beq gcd_done
-    
+
+# swap e and phi for modulus
+    MOV r2, r0
+    MOV r0, r1
+    MOV r1, r2
 
 gcd_loop:
-    bl modulo
-    mov r3, r0
-    mov r1, r0
-    mov r1, r3
-    cmp r1, #0
-    bne gcd_loop
+    # store r1 in r3 for later
+    MOV r3, r1
+    BL modulo
+
+    # b = a%b
+    MOV r1, r0
+
+    # a = original b
+    MOV r0, r3
+
+# continue while b != 0
+    CMP r1, #0
+    BGT gcd_loop
+
     
 gcd_done:
-    bx lr
+    # Return process
+    LDR lr, [sp, #0]
+    ADD sp, sp, #4
+    MOV pc, lr
 
 modulo:
-    cmp r0, r1         @ while a >= b
-    blt mod_done
+    # allocate space on stack
+    SUB sp, sp, #4
+    STR lr, [sp, #0]
+
+    CMP r0, r1         @ while a >= b
+    BLT mod_done
 
 mod_loop:
-    sub r0, r0, r1     @ a = a - b
-    cmp r0, r1
-    bge mod_loop
+    SUB r0, r0, r1     @ a = a - b
+    CMP r0, r1
+    BGE mod_loop
 
 mod_done:
-    bx lr              @ return a in r0
+    # Return process
+    LDR lr, [sp, #0]
+    ADD sp, sp, #4
+    MOV pc, lr         @ return a in r0
 
 pow:
-    mov r2, #1
-    cmp r1, #0
-    beq pow_end
+    # allocate space on stack
+    SUB sp, sp, #4
+    STR lr, [sp, #0]
+
+    MOV r2, #1
+    CMP r1, #0
+    BEQ pow_end
 
 pow_loop:
-    mul r2, r0, r2
-    subs r1, r1, #1
-    bne power_loop
+    MUL r2, r0, r2
+    SUBS r1, r1, #1
+    BNE pow_loop
 
 pow_end:
-   bx lr		@ return result in r2
+    # Return process
+    LDR lr, [sp, #0]
+    ADD sp, sp, #4
+    MOV pc, lr		@ return result in r2
+
+#END pow
+
+cprivexp:
+    SUB sp, sp, #4
+    STR lr, [sp, #0]
+
+    
+
+#END cprivexp
+
+# Modulo inverse using Extended Euclidean Algorithm
+modinv:
+    # Allocate space on stack
+    SUB sp, sp, #4
+    STR lr, [sp, #0]
+
+    mov r4, #0               @ t = 0
+    mov r5, #1               @ newt = 1
+    mov r6, r1               @ r = phi
+    mov r7, r0               @ newr = e
+
+modinv_loop:
+    cmp r7, #0
+    beq modinv_exit
+
+    @ quotient = r / newr
+    mov r0, r6               @ dividend (r)
+    mov r1, r7               @ divisor (newr)
+    bl __aeabi_idiv
+    mov r3, r0               @ store quotient in r3
+
+    @ t, newt update
+    mov r0, r4               @ temp = t
+    mov r4, r5               @ t = newt
+    mul r1, r3, r5           @ r1 = quotient * newt
+    sub r5, r0, r1           @ newt = temp - quotient * newt
+
+    @ r, newr update
+    mov r0, r6               @ temp = r
+    mov r6, r7               @ r = newr
+    mul r1, r3, r7           @ r1 = quotient * newr
+    sub r7, r0, r1           @ newr = temp - quotient * newr
+
+    b modinv_loop
+
+modinv_exit:
+    cmp r4, #0
+    bge modinv_return        @ If t >= 0, done
+
+    add r4, r4, r1           @ t += phi
+
+modinv_return:
+    mov r0, r4               @ Return d
+    # Return process
+    LDR lr, [sp, #0]
+    ADD sp, sp, #4
+    MOV pc, lr
 
 
-print:
-    mov r1, r2        @ Store character in r1
-    ldr r0, =out      @ Output buffer
-    strb r1, [r0]     @ Store byte to string
 
-    mov r0, #1        @ stdout
-    ldr r1, =out      @ pointer to buffer
-    mov r2, #2        @ length (digit + \n)
-    mov r7, #4        @ syscall write
-    svc 0
+decrypt:
+#TODO
 
-    bx lr             @ Return
+encrypt:
+#TODO

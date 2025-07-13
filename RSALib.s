@@ -39,20 +39,20 @@ phi:
 
 
 gcd:
-    # allocate space on stack
+    # Allocate space on stack
     SUB sp, sp, #4
     STR lr, [sp, #0]
 
     cmp r1, #0
     beq gcd_done
 
-# swap e and phi for modulus
+    # swap e and phi for modulus
     MOV r2, r0
     MOV r0, r1
     MOV r1, r2
 
 gcd_loop:
-    # store r1 in r3 for later
+    # Store r1 in r3 for later
     MOV r3, r1
     BL modulo
 
@@ -62,7 +62,7 @@ gcd_loop:
     # a = original b
     MOV r0, r3
 
-# continue while b != 0
+    # continue while b != 0
     CMP r1, #0
     BGT gcd_loop
 
@@ -115,11 +115,13 @@ pow_end:
 #END pow
 
 cprivexp:
+    # Allocate space
     SUB sp, sp, #4
     STR lr, [sp, #0]
 
-    
+    # TODO
 
+    
 #END cprivexp
 
 # Modulo inverse using Extended Euclidean Algorithm
@@ -128,49 +130,51 @@ modinv:
     SUB sp, sp, #4
     STR lr, [sp, #0]
 
-    mov r4, #0               @ t = 0
-    mov r5, #1               @ newt = 1
-    mov r6, r1               @ r = phi
-    mov r7, r0               @ newr = e
+    MOV r4, #0               @ t = 0
+    MOV r5, #1               @ newt = 1
+    MOV r6, r1               @ r = phi
+    MOV r7, r0               @ newr = e
 
 modinv_loop:
-    cmp r7, #0
-    beq modinv_exit
+    CMP r7, #0
+    BEQ modinv_exit
 
-    @ quotient = r / newr
-    mov r0, r6               @ dividend (r)
-    mov r1, r7               @ divisor (newr)
-    bl __aeabi_idiv
-    mov r3, r0               @ store quotient in r3
+    # Quotient = r / newr
+    MOV r0, r6               @ dividend (r)
+    MOV r1, r7               @ divisor (newr)
+    BL __aeabi_idiv
+    MOV r3, r0               @ store quotient in r3
 
-    @ t, newt update
-    mov r0, r4               @ temp = t
-    mov r4, r5               @ t = newt
-    mul r1, r3, r5           @ r1 = quotient * newt
-    sub r5, r0, r1           @ newt = temp - quotient * newt
+    # t, newt update
+    MOV r0, r4               @ temp = t
+    MOV r4, r5               @ t = newt
+    MUL r1, r3, r5           @ r1 = quotient * newt
+    SUB r5, r0, r1           @ newt = temp - quotient * newt
 
-    @ r, newr update
-    mov r0, r6               @ temp = r
-    mov r6, r7               @ r = newr
-    mul r1, r3, r7           @ r1 = quotient * newr
-    sub r7, r0, r1           @ newr = temp - quotient * newr
+    # r, newr update
+    MOV r0, r6               @ temp = r
+    MOV r6, r7               @ r = newr
+    MUL r1, r3, r7           @ r1 = quotient * newr
+    SUB r7, r0, r1           @ newr = temp - quotient * newr
 
-    b modinv_loop
+    B modinv_loop
 
 modinv_exit:
-    cmp r4, #0
-    bge modinv_return        @ If t >= 0, done
+    CMP r4, #0
+    BGE modinv_return        @ If t >= 0, done
 
-    add r4, r4, r1           @ t += phi
+    ADD r4, r4, r1           @ t += phi
 
 modinv_return:
-    mov r0, r4               @ Return d
+    MOV r0, r4               @ Return d
+
     # Return process
     LDR lr, [sp, #0]
     ADD sp, sp, #4
     MOV pc, lr
 
 
+#END modinv
 
 decrypt:
 #TODO

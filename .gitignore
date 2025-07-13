@@ -1,0 +1,48 @@
+# Editor swap/backup files
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+# Object files
+*.o
+
+# Compiled binaries
+*.elf
+*.bin
+*.hex
+*.img
+*.out
+*.exe
+
+# Linker map files
+*.map
+
+# Dependency files (if using Make)
+*.d
+
+# Build directories (optional)
+build/
+out/
+bin/
+
+# Log files
+*.log
+
+# IDE/Editor-specific files (optional)
+.vscode/
+.idea/
+*.user
+*.workspace
+
+# Make-specific
+Makefile~
+
+# macOS specific
+.DS_Store
+
+# Tags or ctags
+tags
+TAGS
+
